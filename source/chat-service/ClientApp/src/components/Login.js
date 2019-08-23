@@ -21,7 +21,7 @@ export class Login extends Component {
                 'Password': this.state.password
             })
         }).then(response => response.json()).then(response => {
-            this.setState({token: response.Token, alias: response.Alias, authorized: true})
+            this.setState({token: response.token, alias: response.alias, authorized: true})
         });
 
         event.preventDefault();

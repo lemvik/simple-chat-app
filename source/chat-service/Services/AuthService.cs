@@ -28,8 +28,9 @@ namespace LemVic.Services.Chat.Services
 
         public async Task<(ChatUser User, string Token)> Authenticate(string userName, string password)
         {
-            var userAuth = await ChatDbContext.Auths.FirstOrDefaultAsync(auth => auth.Login == userName
-                                                                                 && auth.Password == password);
+            var userAuth = await ChatDbContext.Auths.Include(auth => auth.User)
+                                              .FirstOrDefaultAsync(auth => auth.Login == userName
+                                                                           && auth.Password == password);
 
             if (userAuth == null)
             {

@@ -4,13 +4,10 @@ import {HubConnectionBuilder} from '@aspnet/signalr';
 export class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {messages: [], input: "", connected: false};
+        this.state = {members: [], messages: [], input: "", connected: false};
         this.alias = props.location.state.alias;
-        
+
         let token = props.location.state.token;
-        
-        console.log(this.alias);
-        console.log(token);
 
         this.connection = new HubConnectionBuilder()
             .withUrl("/chat", {accessTokenFactory: () => token})
@@ -23,8 +20,10 @@ export class ChatRoom extends Component {
         }.bind(this)).catch(function (error) {
             return console.error(error.toString());
         });
-        
+
         this.connection.on("ReceiveMessage", this.addMessage.bind(this));
+        this.connection.on("UserConnected", this.addChatUser.bind(this));
+        this.connection.on("UserDisconnected", this.removeChatUser.bind(this));
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -35,12 +34,24 @@ export class ChatRoom extends Component {
         })
     }
 
+    addChatUser(user) {
+        this.setState((state) => {
+            return {members: [...state.members, {user: user}]};
+        });
+    }
+
+    removeChatUser(user) {
+        this.setState((state) => {
+            return {members: state.members.filter(m => m.user !== user)};
+        });
+    }
+
     handleChange(event) {
         this.setState({input: event.target.value})
     }
 
     handleSubmit(event) {
-        this.connection.invoke("SendMessage", this.props.alias, this.state.input).catch(err => console.error(err));
+        this.connection.invoke("SendMessage", this.alias, this.state.input).catch(err => console.error(err));
         event.preventDefault();
     }
 
@@ -49,11 +60,17 @@ export class ChatRoom extends Component {
             return (<p><em>Connecting...</em></p>);
         }
         
+        let users = this.state.members.map(mem => <li key={mem.user}><span>{mem.user}</span></li>);
+
+        console.dir(this.state.messages);
         let contents = this.state.messages.map(msg => <li key={msg.message}>
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);
 
         return (
             <div>
+                <ul>
+                    {users}
+                </ul>
                 <ul>
                     {contents}
                 </ul>
@@ -66,5 +83,9 @@ export class ChatRoom extends Component {
                 </div>
             </div>
         );
+    }
+
+    componentWillUnmount() {
+        this.connection.stop().catch(err => console.error(err));
     }
 }
