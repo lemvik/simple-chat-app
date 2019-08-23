@@ -8,7 +8,9 @@ export class Home extends Component {
     constructor(props) {
         super(props);
         this.state = {connected: false};
-        this.connection = new HubConnectionBuilder().withUrl("/chat").build();
+        this.connection = new HubConnectionBuilder()
+            .withUrl("/chat", {accessTokenFactory: () => this.props.accessToken})
+            .build();
 
         this.connection.start().then(function () {
             this.setState(() => {
@@ -21,9 +23,9 @@ export class Home extends Component {
 
     render() {
         if (!this.state.connected) {
-            return (<p><em>Connecting...</em></p>);      
+            return (<p><em>Connecting...</em></p>);
         }
-        
+
         return (
             <div>
                 <ChatRoom connection={this.connection}/>
