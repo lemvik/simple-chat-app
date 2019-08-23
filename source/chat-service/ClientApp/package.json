@@ -12,7 +12,7 @@
     "react-scripts": "^1.1.5",
     "reactstrap": "^6.3.0",
     "rimraf": "^2.6.2",
-    "signalr": "2.4.1"
+    "@aspnet/signalr": "1.0.4"
   },
   "devDependencies": {
     "ajv": "^6.0.0",
