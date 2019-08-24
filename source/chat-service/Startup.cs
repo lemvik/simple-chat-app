@@ -36,7 +36,7 @@ namespace LemVic.Services.Chat
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
-            
+
             services.AddDbContext<ChatDbContext>(options => { options.UseInMemoryDatabase("__chat__"); });
             services.AddIdentity<UserAuth, IdentityRole>()
                     .AddEntityFrameworkStores<ChatDbContext>()
@@ -106,8 +106,7 @@ namespace LemVic.Services.Chat
             app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat"); });
 
             app.UseMvc(routes => {
-                routes.MapRoute(name: "default",
-                                template: "{controller}/{action=Index}/{id?}");
+                routes.MapRoute("default", "{controller}/{action=Index}/{id?}");
             });
 
             app.UseSpa(spa => {
@@ -115,7 +114,7 @@ namespace LemVic.Services.Chat
 
                 if (env.IsDevelopment())
                 {
-                    spa.UseReactDevelopmentServer(npmScript: "start");
+                    spa.UseReactDevelopmentServer("start");
                 }
             });
         }
