@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationManifest  ApplicationTypeName="chat-serviceType" ApplicationTypeVersion="1.0.0"
+                      xmlns="http://schemas.microsoft.com/2011/01/fabric" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="chat-servicePkg" ServiceManifestVersion="1.0.0" />
+    <Policies>
+      <ContainerHostPolicies CodePackageRef="Code">
+        <PortBinding ContainerPort="80" EndpointRef="chat-serviceEndpoint"/>
+      </ContainerHostPolicies>
+    </Policies>
+  </ServiceManifestImport>
+
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="MyServicePKg" ServiceManifestVersion="1.0.0" />
+    <Policies>
+      <ServicePackageResourceGovernancePolicy CpuCores="1"/>
+      <ResourceGovernancePolicy CodePackageRef="Code" MemoryInMB="1024"  />
+    </Policies>
+  </ServiceManifestImport>
+
+  <ServiceManifestImport>
+    <ServiceManifestRef ServiceManifestName="ContainerServicePkg" ServiceManifestVersion="2.0.0" />
+    <Policies>
+      <ContainerHostPolicies CodePackageRef="Code">
+        <HealthConfig IncludeDockerHealthStatusInSystemHealthReport="true"
+                      RestartContainerOnUnhealthyDockerHealthStatus="false" 
+                      TreatContainerUnhealthyStatusAsError="false" />
+      </ContainerHostPolicies>
+    </Policies>
+  </ServiceManifestImport>
+  
+  <DefaultServices>
+    <Service Name="chat-service">
+      <StatelessService ServiceTypeName="chat-serviceType" InstanceCount="2">
+        <SingletonPartition />
+      </StatelessService>
+    </Service>
+  </DefaultServices>
+  
+</ApplicationManifest>
