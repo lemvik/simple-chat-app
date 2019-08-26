@@ -36,7 +36,7 @@ export class ChatRoom extends Component {
 
     addChatUser(user) {
         this.setState((state) => {
-            return {members: [...state.members, {user: user}]};
+            return {members: [...state.members.filter(m => m.user !== user), {user: user}]};
         });
     }
 
@@ -52,6 +52,7 @@ export class ChatRoom extends Component {
 
     handleSubmit(event) {
         this.connection.invoke("SendMessage", this.alias, this.state.input).catch(err => console.error(err));
+        this.setState({input: ""});
         event.preventDefault();
     }
 

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using LemVic.Services.Chat.DataAccess;
 using LemVic.Services.Chat.DataAccess.Models;
 using LemVic.Services.Chat.Hubs;
+using LemVic.Services.Chat.Relay;
 using LemVic.Services.Chat.Services;
 using LemVic.Services.Chat.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -16,7 +17,9 @@ using Microsoft.AspNetCore.SpaServices.ReactDevelopmentServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace LemVic.Services.Chat
 {
@@ -37,7 +40,10 @@ namespace LemVic.Services.Chat
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
 
-            services.AddDbContext<ChatDbContext>(options => { options.UseInMemoryDatabase("__chat__"); });
+            services.AddEntityFrameworkSqlServer()
+                    .AddDbContext<ChatDbContext>(options => {
+                        options.UseSqlServer(Configuration.GetConnectionString("ChatAppDb"));
+                    });
             services.AddIdentity<UserAuth, IdentityRole>()
                     .AddEntityFrameworkStores<ChatDbContext>()
                     .AddDefaultTokenProviders();
@@ -75,12 +81,16 @@ namespace LemVic.Services.Chat
                     });
 
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>()
-                    .AddScoped<IAuthService, AuthService>();
+                    .AddSingleton<IHostedService, ChatMessagesBroadcaster>()
+                    .AddScoped<IAuthService, AuthService>()
+                    .AddAzureRelay();
 
             // Add SignalR server component.
             services.AddSignalR();
 
-            services.Configure<SecuritySettings>(Configuration.GetSection("Security"));
+            // Inject options.
+            services.Configure<SecuritySettings>(Configuration.GetSection("Security"))
+                    .Configure<AzureRelayOptions>(Configuration.GetSection("Azure:Relay"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -105,9 +115,7 @@ namespace LemVic.Services.Chat
 
             app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat"); });
 
-            app.UseMvc(routes => {
-                routes.MapRoute("default", "{controller}/{action=Index}/{id?}");
-            });
+            app.UseMvc(routes => { routes.MapRoute("default", "{controller}/{action=Index}/{id?}"); });
 
             app.UseSpa(spa => {
                 spa.Options.SourcePath = "ClientApp";

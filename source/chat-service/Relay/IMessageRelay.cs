@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace LemVic.Services.Chat.Relay
@@ -9,5 +10,11 @@ namespace LemVic.Services.Chat.Relay
         Task RelayUserDisconnected(string user);
 
         Task RelayUserMessage(string user, string message);
+
+        void OnUserConnected(Func<string, Task> onUserConnected);
+
+        void OnUserDisconnected(Func<string, Task> onUserDisconnected);
+
+        void OnUserPostedMessage(Func<string, string, Task> onUserPostedMessage);
     }
 }

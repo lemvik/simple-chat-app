@@ -3,7 +3,7 @@ resource "azurerm_cosmosdb_account" "messages-db" {
   location            = "${azurerm_resource_group.chat-app.location}"
   resource_group_name = "${azurerm_resource_group.chat-app.name}"
   offer_type          = "Standard"
-  kind                = "GlobalDocumentDB"
+  kind                = "MongoDB"
 
   enable_automatic_failover = false 
 
