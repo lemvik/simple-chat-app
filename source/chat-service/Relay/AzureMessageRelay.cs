@@ -1,10 +1,11 @@
 using System;
-using System.IO;
-using System.Runtime.Serialization;
+using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using LemVic.Services.Chat.Relay.Protocol;
 using Microsoft.Azure.ServiceBus;
+using Newtonsoft.Json;
 
 namespace LemVic.Services.Chat.Relay
 {
@@ -16,6 +17,7 @@ namespace LemVic.Services.Chat.Relay
         private Func<string, Task>         UserConnectedHandler;
         private Func<string, Task>         UserDisconnectedHandler;
         private Func<string, string, Task> UserPostedMessageHandler;
+        private Func<string[], Task>       HubStatusHandler;
 
         public AzureMessageRelay(ITopicClient topicClient, ISubscriptionClient subscriptionClient)
         {
@@ -40,12 +42,15 @@ namespace LemVic.Services.Chat.Relay
             return TopicClient.SendAsync(SerializeMessage(new UserPostedMessage {UserName = user, Message = message}));
         }
 
+        public Task HubStatus(string[] users)
+        {
+            return TopicClient.SendAsync(SerializeMessage(new HubStatus{HubUsers = users}));
+        }
+
         private static Message SerializeMessage<T>(T message) where T : class
         {
-            var memoryStream = new MemoryStream();
-            var writer       = new DataContractSerializer(typeof(UserMessage));
-            writer.WriteObject(memoryStream, message);
-            return new Message(memoryStream.ToArray());
+            var jsonRepresentation = JsonConvert.SerializeObject(message);
+            return new Message(Encoding.UTF8.GetBytes(jsonRepresentation));
         }
 
         private Task OnException(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
@@ -92,14 +97,23 @@ namespace LemVic.Services.Chat.Relay
 
                     break;
                 }
+
+                case HubStatus hubStatus:
+                {
+                    if (HubStatusHandler != null)
+                    {
+                        await HubStatusHandler(hubStatus.HubUsers);
+                    }
+
+                    break;
+                }
             }
         }
 
-        private static UserMessage DeserializeMessage(Message message)
+        private static RootMessage DeserializeMessage(Message message)
         {
-            var memoryStream = new MemoryStream(message.Body);
-            var reader       = new DataContractSerializer(typeof(UserMessage));
-            return reader.ReadObject(memoryStream) as UserMessage;
+            var stringRepresentation = Encoding.UTF8.GetString(message.Body);
+            return JsonConvert.DeserializeObject<RootMessage>(stringRepresentation);
         }
 
         public void OnUserConnected(Func<string, Task> onUserConnected)
@@ -133,6 +147,17 @@ namespace LemVic.Services.Chat.Relay
             }
 
             UserPostedMessageHandler = onUserPostedMessage;
+        }
+
+        public void OnHubStatus(Func<string[], Task> onHubStatus)
+        {
+            if (HubStatusHandler != null)
+            {
+                // NOTE: for simplicity sake we don't create custom exception and don't allow more than one handler.
+                throw new Exception("Cannot set more than on OnHubStatus delegate.");
+            }
+
+            HubStatusHandler = onHubStatus;
         }
     }
 }

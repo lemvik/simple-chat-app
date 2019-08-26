@@ -11,10 +11,14 @@ namespace LemVic.Services.Chat.Relay
 
         Task RelayUserMessage(string user, string message);
 
+        Task HubStatus(string[] users);
+
         void OnUserConnected(Func<string, Task> onUserConnected);
 
         void OnUserDisconnected(Func<string, Task> onUserDisconnected);
 
         void OnUserPostedMessage(Func<string, string, Task> onUserPostedMessage);
+
+        void OnHubStatus(Func<string[], Task> onHubStatus);
     }
 }

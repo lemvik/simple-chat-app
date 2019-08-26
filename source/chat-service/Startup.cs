@@ -81,7 +81,7 @@ namespace LemVic.Services.Chat
                     });
 
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>()
-                    .AddSingleton<IHostedService, ChatMessagesBroadcaster>()
+                    .AddSingleton<IHostedService, ChatHubService>()
                     .AddScoped<IAuthService, AuthService>()
                     .AddAzureRelay();
 
