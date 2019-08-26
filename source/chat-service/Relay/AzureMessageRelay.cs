@@ -1,11 +1,10 @@
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.IO;
+using System.Runtime.Serialization.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using LemVic.Services.Chat.Relay.Protocol;
 using Microsoft.Azure.ServiceBus;
-using Newtonsoft.Json;
 
 namespace LemVic.Services.Chat.Relay
 {
@@ -44,13 +43,15 @@ namespace LemVic.Services.Chat.Relay
 
         public Task HubStatus(string[] users)
         {
-            return TopicClient.SendAsync(SerializeMessage(new HubStatus{HubUsers = users}));
+            return TopicClient.SendAsync(SerializeMessage(new HubStatus {HubUsers = users}));
         }
 
         private static Message SerializeMessage<T>(T message) where T : class
         {
-            var jsonRepresentation = JsonConvert.SerializeObject(message);
-            return new Message(Encoding.UTF8.GetBytes(jsonRepresentation));
+            var memoryStream = new MemoryStream();
+            var serializer   = new DataContractJsonSerializer(typeof(RootMessage));
+            serializer.WriteObject(memoryStream, message);
+            return new Message(memoryStream.ToArray());
         }
 
         private Task OnException(ExceptionReceivedEventArgs exceptionReceivedEventArgs)
@@ -112,8 +113,9 @@ namespace LemVic.Services.Chat.Relay
 
         private static RootMessage DeserializeMessage(Message message)
         {
-            var stringRepresentation = Encoding.UTF8.GetString(message.Body);
-            return JsonConvert.DeserializeObject<RootMessage>(stringRepresentation);
+            var memoryStream = new MemoryStream(message.Body);
+            var serializer   = new DataContractJsonSerializer(typeof(RootMessage));
+            return serializer.ReadObject(memoryStream) as RootMessage;
         }
 
         public void OnUserConnected(Func<string, Task> onUserConnected)

@@ -22,8 +22,7 @@ export class ChatRoom extends Component {
         });
 
         this.connection.on("ReceiveMessage", this.addMessage.bind(this));
-        this.connection.on("UserConnected", this.addChatUser.bind(this));
-        this.connection.on("UserDisconnected", this.removeChatUser.bind(this));
+        this.connection.on("Presence", this.updatePresence.bind(this));
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
     }
@@ -34,15 +33,11 @@ export class ChatRoom extends Component {
         })
     }
 
-    addChatUser(user) {
-        this.setState((state) => {
-            return {members: [...state.members.filter(m => m.user !== user), {user: user}]};
-        });
-    }
-
-    removeChatUser(user) {
-        this.setState((state) => {
-            return {members: state.members.filter(m => m.user !== user)};
+    updatePresence(users) {
+        this.setState({
+            members: users.map(n => {
+                return {user: n};
+            })
         });
     }
 
@@ -60,10 +55,9 @@ export class ChatRoom extends Component {
         if (!this.state.connected) {
             return (<p><em>Connecting...</em></p>);
         }
-        
+
         let users = this.state.members.map(mem => <li key={mem.user}><span>{mem.user}</span></li>);
 
-        console.dir(this.state.messages);
         let contents = this.state.messages.map(msg => <li key={msg.message}>
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);
 

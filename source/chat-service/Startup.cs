@@ -56,7 +56,8 @@ namespace LemVic.Services.Chat
                     .AddJwtBearer(options => {
                         var securitySettings = Configuration.GetSection("Security").Get<SecuritySettings>();
 
-                        options.TokenValidationParameters = new TokenValidationParameters {
+                        options.TokenValidationParameters = new TokenValidationParameters
+                        {
                             LifetimeValidator = (before, expires, token, param) => expires > DateTime.UtcNow,
                             ValidateAudience  = false,
                             ValidateIssuer    = false,
@@ -66,7 +67,8 @@ namespace LemVic.Services.Chat
                                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securitySettings.SecretKey))
                         };
 
-                        options.Events = new JwtBearerEvents {
+                        options.Events = new JwtBearerEvents
+                        {
                             OnMessageReceived = context => {
                                 var accessToken = context.Request.Query["access_token"];
                                 var hubPath     = context.HttpContext.Request.Path;
@@ -82,6 +84,7 @@ namespace LemVic.Services.Chat
 
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>()
                     .AddSingleton<IHostedService, ChatHubService>()
+                    .AddSingleton<IChatPresenceService, InMemoryChatPresenceService>()
                     .AddScoped<IAuthService, AuthService>()
                     .AddAzureRelay();
 
