@@ -12,5 +12,5 @@ resource "azurerm_servicebus_subscription" "chat-app" {
   namespace_name      = "${azurerm_servicebus_namespace.chat-app.name}"
   topic_name          = "${azurerm_servicebus_topic.chat-app.name}"
   max_delivery_count  = 1
-  default_message_ttl = "0:0:10:00"
+  default_message_ttl = "P0DT0H19M5.0S"
 }
