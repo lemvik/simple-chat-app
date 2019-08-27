@@ -1,4 +1,5 @@
 resource "azurerm_cosmosdb_account" "messages-db" {
+  count = 0
   name                = "chat-app-account"
   location            = "${azurerm_resource_group.chat-app.location}"
   resource_group_name = "${azurerm_resource_group.chat-app.name}"

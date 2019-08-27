@@ -1,5 +1,6 @@
 import React, {Component} from 'react';
 import {HubConnectionBuilder} from '@aspnet/signalr';
+import '../css/custom.css'
 
 export class ChatRoom extends Component {
     constructor(props) {
@@ -66,7 +67,7 @@ export class ChatRoom extends Component {
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);
 
         return (
-            <div>
+            <div className={'chat-room'}>
                 <ul>
                     {users}
                 </ul>

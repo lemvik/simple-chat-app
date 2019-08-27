@@ -7,6 +7,7 @@ namespace LemVic.Services.Chat.Relay.Protocol
     [KnownType(typeof(UserConnected))]
     [KnownType(typeof(UserDisconnected))]
     [KnownType(typeof(UserPostedMessage))]
+    [KnownType(typeof(HubStatus))]
     public class RootMessage
     {
     }
