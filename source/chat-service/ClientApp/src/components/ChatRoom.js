@@ -4,7 +4,7 @@ import {HubConnectionBuilder} from '@aspnet/signalr';
 export class ChatRoom extends Component {
     constructor(props) {
         super(props);
-        this.state = {members: [], messages: [], input: "", connected: false};
+        this.state = {members: [], messages: [], lastMessageId: 0, input: "", connected: false};
         this.alias = props.location.state.alias;
 
         let token = props.location.state.token;
@@ -29,7 +29,11 @@ export class ChatRoom extends Component {
 
     addMessage(user, message) {
         this.setState((state) => {
-            return {messages: [...state.messages, {user: user, message: message}]};
+            let newMessageId = state.lastMessageId + 1;
+            return {
+                messages: [...state.messages, {user: user, message: message, id: newMessageId}],
+                lastMessageId: newMessageId
+            };
         })
     }
 
@@ -58,7 +62,7 @@ export class ChatRoom extends Component {
 
         let users = this.state.members.map(mem => <li key={mem.user}><span>{mem.user}</span></li>);
 
-        let contents = this.state.messages.map(msg => <li key={msg.message}>
+        let contents = this.state.messages.map(msg => <li key={msg.id}>
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);
 
         return (
