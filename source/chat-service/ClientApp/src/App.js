@@ -5,6 +5,7 @@ import {ChatRoom} from "./components/ChatRoom";
 import {Login} from "./components/Login";
 import {Lobby} from "./components/Lobby";
 import {Create} from "./components/Create";
+import './css/custom.css'
 
 export default class App extends Component {
     static displayName = App.name;

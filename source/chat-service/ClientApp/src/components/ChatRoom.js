@@ -1,6 +1,5 @@
 import React, {Component} from 'react';
 import {HubConnectionBuilder} from '@aspnet/signalr';
-import '../css/custom.css'
 
 export class ChatRoom extends Component {
     constructor(props) {
@@ -67,19 +66,27 @@ export class ChatRoom extends Component {
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);
 
         return (
-            <div className={'chat-room'}>
-                <ul>
-                    {users}
-                </ul>
-                <ul>
-                    {contents}
-                </ul>
-                <div>
-                    <form onSubmit={this.handleSubmit}>
-                        <label>Enter message:</label>
-                        <input type="text" value={this.state.input} id="chatMessage" onChange={this.handleChange}/>
-                        <input type="submit" value="Send"/>
-                    </form>
+            <div className={'row'}>
+                <div className={'col-sm-1'}>
+                    <header>Users:</header>
+                    <ul className={'list-unstyled'}>
+                        {users}
+                    </ul>
+                </div>
+                <div className={'col-sm-11'}>
+                    <header>Chat:</header>
+                    <ul className={'list-unstyled'}>
+                        {contents}
+                    </ul>
+                    <div>
+                        <form onSubmit={this.handleSubmit}>
+                            <div className={'form-group'}>
+                                <label>Enter message:</label>
+                                <input type="text" value={this.state.input} className={'form-control'} id="chatMessage"
+                                       onChange={this.handleChange}/>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         );

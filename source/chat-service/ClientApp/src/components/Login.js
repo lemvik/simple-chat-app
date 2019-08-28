@@ -37,16 +37,24 @@ export class Login extends Component {
 
     render() {
         if (this.state.authorized) {
-            return (<Redirect to={ {pathname: '/chat', state: {alias: this.state.alias, token: this.state.token }} } />);
+            return (<Redirect to={{pathname: '/chat', state: {alias: this.state.alias, token: this.state.token}}}/>);
         }
-        
+
         return (
             <form onSubmit={this.handleSubmit}>
-                <div><label>Login:</label><input type="text" value={this.state.login} onChange={this.handleNameChange}/>
+                <div className={'form-group'}>
+                    <label>Login:</label>
+                    <input type="text" value={this.state.login} className={'form-control'}
+                           onChange={this.handleNameChange}
+                           placeholder={"Login"}/>
                 </div>
-                <div><label>Password:</label><input type="password" value={this.state.password}
-                                                    onChange={this.handlePasswordChange}/></div>
-                <input type="submit"/>
+                <div className={'form-group'}>
+                    <label>Password:</label>
+                    <input type="password" value={this.state.password} className={'form-control'}
+                           onChange={this.handlePasswordChange}
+                           placeholder={"Password"}/>
+                </div>
+                <button type="submit" className="btn btn-primary">Submit</button>
             </form>
         );
     }
