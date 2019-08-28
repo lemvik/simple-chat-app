@@ -10,6 +10,7 @@ resource "azurerm_subnet" "chat-app-subnet" {
   resource_group_name  = "${azurerm_resource_group.chat-app.name}"
   virtual_network_name = "${azurerm_virtual_network.chat-app.name}"
   address_prefix       = "10.0.0.0/24"
+  service_endpoints    = ["Microsoft.AzureCosmosDB"]
 }
 
 resource "azurerm_public_ip" "chat-app" { # public ip and dns allocation

@@ -12,12 +12,6 @@ namespace LemVic.Services.Chat.Relay
                                         var opts = provider.GetService<IOptions<AzureRelayOptions>>().Value;
                                         return new TopicClient(opts.ConnectionString, opts.Topic);
                                     })
-                                    .AddTransient<ISubscriptionClient>(provider => {
-                                        var opts = provider.GetService<IOptions<AzureRelayOptions>>().Value;
-                                        return new SubscriptionClient(opts.ConnectionString,
-                                                                      opts.Topic,
-                                                                      opts.SubscriptionName);
-                                    })
                                     .AddSingleton<IMessageRelay, AzureMessageRelay>();
         }
     }

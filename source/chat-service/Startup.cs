@@ -19,6 +19,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using StackExchange.Redis;
 using IHostingEnvironment = Microsoft.AspNetCore.Hosting.IHostingEnvironment;
 
 namespace LemVic.Services.Chat
@@ -56,8 +57,7 @@ namespace LemVic.Services.Chat
                     .AddJwtBearer(options => {
                         var securitySettings = Configuration.GetSection("Security").Get<SecuritySettings>();
 
-                        options.TokenValidationParameters = new TokenValidationParameters
-                        {
+                        options.TokenValidationParameters = new TokenValidationParameters {
                             LifetimeValidator = (before, expires, token, param) => expires > DateTime.UtcNow,
                             ValidateAudience  = false,
                             ValidateIssuer    = false,
@@ -67,8 +67,7 @@ namespace LemVic.Services.Chat
                                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(securitySettings.SecretKey))
                         };
 
-                        options.Events = new JwtBearerEvents
-                        {
+                        options.Events = new JwtBearerEvents {
                             OnMessageReceived = context => {
                                 var accessToken = context.Request.Query["access_token"];
                                 var hubPath     = context.HttpContext.Request.Path;
@@ -84,16 +83,30 @@ namespace LemVic.Services.Chat
 
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>()
                     .AddSingleton<IHostedService, ChatHubService>()
-                    .AddSingleton<IChatPresenceService, InMemoryChatPresenceService>()
+                    .AddSingleton<IHostedService, RedisPresenceCleanupService>()
+                    .AddSingleton<IChatPresenceService, RedisChatPresenceService>()
                     .AddScoped<IAuthService, AuthService>()
                     .AddAzureRelay();
 
+            var redisConf = Configuration.GetSection("Azure:Redis").Get<RedisSettings>();
             // Add SignalR server component.
-            services.AddSignalR();
+            services.AddSignalR()
+                    .AddStackExchangeRedis(redisConf.ConnectionString,
+                                           options => {
+                                               options.Configuration.ChannelPrefix = redisConf.ChannelPrefix;
+                                           });
+
+            services.AddSingleton<IConnectionMultiplexer>(provider =>
+                                                              ConnectionMultiplexer.Connect(redisConf.ConnectionString))
+                    .AddTransient<IDatabaseAsync>(provider => {
+                        var multiplexer = provider.GetService<IConnectionMultiplexer>();
+                        return multiplexer.GetDatabase(0);
+                    });
 
             // Inject options.
             services.Configure<SecuritySettings>(Configuration.GetSection("Security"))
-                    .Configure<AzureRelayOptions>(Configuration.GetSection("Azure:Relay"));
+                    .Configure<AzureRelayOptions>(Configuration.GetSection("Azure:Relay"))
+                    .Configure<PresenceSettings>(Configuration.GetSection("Presence"));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

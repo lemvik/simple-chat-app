@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using LemVic.Services.Chat.Relay;
+using LemVic.Services.Chat.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,28 +10,36 @@ namespace LemVic.Services.Chat.Hubs
     [Authorize]
     public class ChatHub : Hub
     {
-        private readonly IMessageRelay MessageRelay;
+        private readonly IChatPresenceService PresenceService;
+        private readonly IMessageRelay        MessageRelay;
 
-        public ChatHub(IMessageRelay messageRelay)
+        public ChatHub(IChatPresenceService presenceService, IMessageRelay messageRelay)
         {
-            MessageRelay = messageRelay;
+            PresenceService = presenceService;
+            MessageRelay    = messageRelay;
         }
 
         public async Task SendMessage(string user, string message)
         {
+            await Clients.All.SendAsync("ReceiveMessage", user, message);
+            await PresenceService.RefreshUser(Context.UserIdentifier, TimeSpan.FromMinutes(1));
             await MessageRelay.RelayUserMessage(user, message);
         }
 
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
-            await MessageRelay.RelayUserConnected(Context.User.Identity.Name);
+            await PresenceService.AddUser(Context.UserIdentifier, TimeSpan.FromMinutes(1));
+            var users = await PresenceService.ListExistingUsers();
+            await Clients.All.SendAsync("Presence", users);
         }
 
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             await base.OnDisconnectedAsync(exception);
-            await MessageRelay.RelayUserDisconnected(Context.User.Identity.Name);
+            await PresenceService.RemoveUser(Context.UserIdentifier);
+            var users = await PresenceService.ListExistingUsers();
+            await Clients.All.SendAsync("Presence", users);
         }
     }
 }

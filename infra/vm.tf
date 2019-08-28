@@ -6,15 +6,15 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
   overprovision       = false
 
   sku {
-    name     = "Standard_B1s"
+    name     = "Standard_B2s"
     tier     = "Standard"
-    capacity = 4
+    capacity = 1
   }
 
   storage_profile_image_reference {
-    publisher = "MicrosoftWindowsServer"
-    offer     = "WindowsServer"
-    sku       = "2019-Datacenter"
+    publisher = "Canonical"
+    offer     = "UbuntuServer"
+    sku       = "16.04-LTS"
     version   = "latest"
   }
 
@@ -29,7 +29,7 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
     lun            = 0
     caching        = "ReadWrite"
     create_option  = "Empty"
-    disk_size_gb   = 5 
+    disk_size_gb   = 20 
   }
 
   os_profile {
@@ -42,12 +42,7 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
     source_vault_id = "${azurerm_key_vault.chat-app.id}"
     vault_certificates {
       certificate_url = "${azurerm_key_vault_certificate.chat-app.secret_id}"
-      certificate_store = "My"
     }
-  }
-
-  identity {
-    type = "SystemAssigned"
   }
 
   network_profile {
@@ -66,7 +61,7 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
   extension { 
     name                 = "ServiceFabricNodeVmExt_vmchats"
     publisher            = "Microsoft.Azure.ServiceFabric"
-    type                 = "ServiceFabricNode"
+    type                 = "ServiceFabricLinuxNode"
     type_handler_version = "1.0"
     settings             = "{ \"certificate\" : {\"thumbprint\": \"${azurerm_key_vault_certificate.chat-app.thumbprint}\", \"x509StoreName\":\"My\"},  \"clusterEndpoint\": \"${azurerm_service_fabric_cluster.chat-app.cluster_endpoint}\", \"nodeTypeRef\": \"chats\", \"durabilityLevel\": \"Bronze\",\"nicPrefixOverride\": \"10.0.0.0/24\"}"
   }

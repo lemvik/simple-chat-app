@@ -1,15 +1,12 @@
 data "azurerm_client_config" "current" {}
 
 resource "azurerm_key_vault" "chat-app" {
-  name                   = "chat-app"
-  location               = "${azurerm_resource_group.chat-app.location}"
-  resource_group_name    = "${azurerm_resource_group.chat-app.name}"
-  tenant_id              = "${data.azurerm_client_config.current.tenant_id}"
-  enabled_for_deployment = true
-
-  lifecycle {
-    ignore_changes = ["*"]
-  }
+  name                            = "chat-app"
+  location                        = "${azurerm_resource_group.chat-app.location}"
+  resource_group_name             = "${azurerm_resource_group.chat-app.name}"
+  tenant_id                       = "${data.azurerm_client_config.current.tenant_id}"
+  enabled_for_deployment          = true
+  enabled_for_template_deployment = true
 
   sku_name = "standard"
 

@@ -4,6 +4,5 @@ namespace LemVic.Services.Chat.Relay
     {
         public string ConnectionString { get; set; }
         public string Topic            { get; set; }
-        public string SubscriptionName { get; set; }
     }
 }
