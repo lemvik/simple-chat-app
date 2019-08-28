@@ -66,7 +66,7 @@ export class ChatRoom extends Component {
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);
 
         return (
-            <div className={'row'}>
+            <div className={'row fill'}>
                 <div className={'col-sm-1'}>
                     <header>Users:</header>
                     <ul className={'list-unstyled'}>
