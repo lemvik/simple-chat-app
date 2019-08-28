@@ -7,6 +7,10 @@ resource "azurerm_key_vault" "chat-app" {
   tenant_id              = "${data.azurerm_client_config.current.tenant_id}"
   enabled_for_deployment = true
 
+  lifecycle {
+    ignore_changes = ["*"]
+  }
+
   sku_name = "standard"
 
   access_policy {

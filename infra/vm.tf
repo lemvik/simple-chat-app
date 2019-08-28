@@ -12,9 +12,9 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
   }
 
   storage_profile_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04-LTS"
+    publisher = "MicrosoftWindowsServer"
+    offer     = "WindowsServer"
+    sku       = "2019-Datacenter"
     version   = "latest"
   }
 
@@ -42,6 +42,7 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
     source_vault_id = "${azurerm_key_vault.chat-app.id}"
     vault_certificates {
       certificate_url = "${azurerm_key_vault_certificate.chat-app.secret_id}"
+      certificate_store = "My"
     }
   }
 
@@ -62,19 +63,11 @@ resource "azurerm_virtual_machine_scale_set" "chat-app" {
     }
   }
 
-  extension {
-    name                 = "MSILinuxExtension"
-    publisher            = "Microsoft.ManagedIdentity"
-    type                 = "ManagedIdentityExtensionForLinux"
-    type_handler_version = "1.0"
-    settings             = "{\"port\": 50342}"
-  }
-
   extension { 
     name                 = "ServiceFabricNodeVmExt_vmchats"
     publisher            = "Microsoft.Azure.ServiceFabric"
-    type                 = "ServiceFabricLinuxNode"
-    type_handler_version = "1.1"
+    type                 = "ServiceFabricNode"
+    type_handler_version = "1.0"
     settings             = "{ \"certificate\" : {\"thumbprint\": \"${azurerm_key_vault_certificate.chat-app.thumbprint}\", \"x509StoreName\":\"My\"},  \"clusterEndpoint\": \"${azurerm_service_fabric_cluster.chat-app.cluster_endpoint}\", \"nodeTypeRef\": \"chats\", \"durabilityLevel\": \"Bronze\",\"nicPrefixOverride\": \"10.0.0.0/24\"}"
   }
 }

@@ -2,9 +2,9 @@ resource "azurerm_service_fabric_cluster" "chat-app" {
   name                 = "chat-app-cluster"
   resource_group_name  = "${azurerm_resource_group.chat-app.name}"
   location             = "${azurerm_resource_group.chat-app.location}"
-  reliability_level    = "Bronze"
+  reliability_level    = "Silver"
   upgrade_mode         = "Automatic"
-  vm_image             = "Linux"
+  vm_image             = "Windows"
   management_endpoint  = "https://${azurerm_public_ip.chat-app.fqdn}:19080"
 
   add_on_features = ["DnsService", "RepairManager"]
