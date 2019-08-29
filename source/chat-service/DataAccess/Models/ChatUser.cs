@@ -1,11 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace LemVic.Services.Chat.DataAccess.Models
 {
-    public class ChatUser
+    public class ChatUser : IdentityUser
     {
-        public long Id { get; set; }
-
         [Required]
         public string Alias { get; set; }
     }

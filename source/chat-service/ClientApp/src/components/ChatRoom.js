@@ -50,7 +50,7 @@ export class ChatRoom extends Component {
     }
 
     handleSubmit(event) {
-        this.connection.invoke("SendMessage", this.alias, this.state.input).catch(err => console.error(err));
+        this.connection.invoke("SendMessage", this.state.input).catch(err => console.error(err));
         this.setState({input: ""});
         event.preventDefault();
     }
@@ -60,7 +60,8 @@ export class ChatRoom extends Component {
             return (<p><em>Connecting...</em></p>);
         }
 
-        let users = this.state.members.map(mem => <li key={mem.user}><span>{mem.user}</span></li>);
+        let users = this.state.members.map(mem => <li key={mem.user}><span
+            color={mem.user === this.state.alias ? 'green' : 'black'}>{mem.user}</span></li>);
 
         let contents = this.state.messages.map(msg => <li key={msg.id}>
             <span>{msg.user}</span>: <span>{msg.message}</span></li>);

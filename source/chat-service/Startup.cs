@@ -33,19 +33,20 @@ namespace LemVic.Services.Chat
 
         private IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        private void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             // In production, the React files will be served from this directory
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/build"; });
 
-            services.AddEntityFrameworkSqlServer()
-                    .AddDbContext<ChatDbContext>(options => {
-                        options.UseSqlServer(Configuration.GetConnectionString("ChatAppDb"));
-                    });
-            services.AddIdentity<UserAuth, IdentityRole>()
+            services.AddIdentity<ChatUser, IdentityRole>(options => {
+                        options.Password.RequireDigit           = false;
+                        options.Password.RequiredLength         = 6;
+                        options.Password.RequireLowercase       = false;
+                        options.Password.RequireNonAlphanumeric = false;
+                        options.Password.RequireUppercase       = false;
+                    })
                     .AddEntityFrameworkStores<ChatDbContext>()
                     .AddDefaultTokenProviders();
 
@@ -83,11 +84,33 @@ namespace LemVic.Services.Chat
 
             services.AddSingleton<IUserIdProvider, NameUserIdProvider>()
                     .AddSingleton<IHostedService, ChatHubService>()
-                    .AddSingleton<IHostedService, RedisPresenceCleanupService>()
-                    .AddSingleton<IChatPresenceService, RedisChatPresenceService>()
-                    .AddScoped<IAuthService, AuthService>()
-                    .AddAzureRelay();
+                    .AddScoped<ITokenService, TokenService>()
+                    .AddTransient(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
 
+            // Inject options.
+            services.Configure<SecuritySettings>(Configuration.GetSection("Security"))
+                    .Configure<AzureRelayOptions>(Configuration.GetSection("Azure:Relay"))
+                    .Configure<PresenceSettings>(Configuration.GetSection("Presence"));
+        }
+
+        public void ConfigureDevelopmentServices(IServiceCollection services)
+        {
+            services.AddEntityFrameworkInMemoryDatabase()
+                    .AddDbContext<ChatDbContext>(options => { options.UseInMemoryDatabase("chat-app-db"); });
+
+            services.AddSingleton<IChatPresenceService, InMemoryChatPresenceService>()
+                    .AddTransient<IMessageRelay, DevNullMessageRelay>()
+                    .AddSignalR();
+
+            ConfigureServices(services);
+        }
+
+        public void ConfigureProductionServices(IServiceCollection services)
+        {
+            services.AddEntityFrameworkSqlServer()
+                    .AddDbContext<ChatDbContext>(options => {
+                        options.UseSqlServer(Configuration.GetConnectionString("ChatAppDb"));
+                    });
             var redisConf = Configuration.GetSection("Azure:Redis").Get<RedisSettings>();
             // Add SignalR server component.
             services.AddSignalR()
@@ -103,10 +126,11 @@ namespace LemVic.Services.Chat
                         return multiplexer.GetDatabase(0);
                     });
 
-            // Inject options.
-            services.Configure<SecuritySettings>(Configuration.GetSection("Security"))
-                    .Configure<AzureRelayOptions>(Configuration.GetSection("Azure:Relay"))
-                    .Configure<PresenceSettings>(Configuration.GetSection("Presence"));
+            ConfigureServices(services);
+
+            services.AddSingleton<IHostedService, RedisPresenceCleanupService>()
+                    .AddSingleton<IChatPresenceService, RedisChatPresenceService>()
+                    .AddAzureRelay();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,4 +1,6 @@
 using System;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using LemVic.Services.Chat.Relay;
 using LemVic.Services.Chat.Services;
@@ -19,17 +21,19 @@ namespace LemVic.Services.Chat.Hubs
             MessageRelay    = messageRelay;
         }
 
-        public async Task SendMessage(string user, string message)
+        public async Task SendMessage(string message)
         {
-            await Clients.All.SendAsync("ReceiveMessage", user, message);
-            await PresenceService.RefreshUser(Context.UserIdentifier, TimeSpan.FromMinutes(1));
-            await MessageRelay.RelayUserMessage(user, message);
+            var userAlias = Context.User.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            await Clients.All.SendAsync("ReceiveMessage", userAlias, message);
+            await PresenceService.RefreshUser(userAlias, TimeSpan.FromMinutes(1));
+            await MessageRelay.RelayUserMessage(userAlias, message);
         }
 
         public override async Task OnConnectedAsync()
         {
             await base.OnConnectedAsync();
-            await PresenceService.AddUser(Context.UserIdentifier, TimeSpan.FromMinutes(1));
+            var userAlias = Context.User.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            await PresenceService.AddUser(userAlias, TimeSpan.FromMinutes(1));
             var users = await PresenceService.ListExistingUsers();
             await Clients.All.SendAsync("Presence", users);
         }
@@ -37,7 +41,8 @@ namespace LemVic.Services.Chat.Hubs
         public override async Task OnDisconnectedAsync(Exception exception)
         {
             await base.OnDisconnectedAsync(exception);
-            await PresenceService.RemoveUser(Context.UserIdentifier);
+            var userAlias = Context.User.Claims.First(claim => claim.Type == ClaimTypes.NameIdentifier)?.Value;
+            await PresenceService.RemoveUser(userAlias);
             var users = await PresenceService.ListExistingUsers();
             await Clients.All.SendAsync("Presence", users);
         }
